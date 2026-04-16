@@ -1,0 +1,27 @@
+﻿{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:5171",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ConnectionStrings__DefaultConnection": "Host=localhost;Port=5432;Database=TransSolutionsDB;Username=admin;Password=password123",
+        "Jwt__Key": "96749f4532aec127bd5679809d1eea5d34b9dc09897ac1e8e1a1c9c7f9941d8b5bb49a39fa505dd4cb13e2b6a853bf7c8ba275c218d34e73362f9aafa5a0f44a",
+        "Jwt__Issuer": "https://trans-solutions.com",
+        "Jwt__Audience": "https://trans-solutions.com"
+      }
+    },
+    "https": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "https://localhost:7255;http://localhost:5171",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

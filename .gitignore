@@ -1,0 +1,51 @@
+# --- Build Results ---
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+Log/
+logs/
+
+# --- Visual Studio Metadata ---
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+
+# --- NuGet Packages ---
+*.nupkg
+# The packages folder can be ignored because NuGet restores them automatically
+**/[Pp]ackage*/
+!**/[Pp]ackages/build/
+
+# --- ASP.NET Core & Web Specifics ---
+project.lock.json
+project.fragment.lock.json
+artifacts/
+wwwroot/lib/
+# Ignore local environment settings
+appsettings.Development.json
+
+# --- Secrets and Environment Variables ---
+.env
+.env.*
+usersecretsid
+secrets.json
+
+# --- Node/Frontend (if using SPA templates) ---
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.eslintcache
+
+# --- OS Generated Files ---
+.DS_Store
+Thumbs.db
