@@ -13,7 +13,7 @@ public class AuthValidatorTests
     [Fact]
     public void Register_ValidRequest_Passes()
     {
-        var request = new RegisterRequest("test@example.com", "password123", "John Doe");
+        var request = new RegisterRequest("test@example.com", "password123", "John", "Doe");
         var result = _registerValidator.TestValidate(request);
         result.ShouldNotHaveAnyValidationErrors();
     }
@@ -23,7 +23,7 @@ public class AuthValidatorTests
     [InlineData("invalid-email")]
     public void Register_InvalidEmail_Fails(string email)
     {
-        var request = new RegisterRequest(email, "password123", "John Doe");
+        var request = new RegisterRequest(email, "password123", "John", "Doe");
         var result = _registerValidator.TestValidate(request);
         result.ShouldHaveValidationErrorFor(x => x.Email);
     }

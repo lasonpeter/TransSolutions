@@ -93,6 +93,8 @@ public class RoadTripService : IRoadTripService
         return new GetRoadTripResponse
         {
             Id = trip.Id,
+            DriverId = trip.DriverId,
+            VehicleId = trip.VehicleId,
             StartDate = trip.StartTime,
             EndDate = trip.EndTime,
             Distance = trip.Distance,
@@ -105,7 +107,7 @@ public class RoadTripService : IRoadTripService
         var query = await _tripRepository.GetQueryable(ct);
 
         if (request.DriverName is not null)
-            query = query.Where(x => x.Driver.User.FullName == request.DriverName);
+            query = query.Where(x => x.Driver.User.FullNameComputed == request.DriverName);
 
         if (request.VehicleName is not null)
             query = query.Where(x => x.Vehicle.Name == request.VehicleName);
@@ -130,6 +132,8 @@ public class RoadTripService : IRoadTripService
             RoadTrips = trips.Select(x => new GetRoadTripResponse
             {
                 Id = x.Id,
+                DriverId = x.DriverId,
+                VehicleId = x.VehicleId,
                 StartDate = x.StartTime,
                 EndDate = x.EndTime,
                 Distance = x.Distance,

@@ -16,8 +16,7 @@ public class DriverService : IDriverService
         var driver = new Driver
         {
             Id = Guid.NewGuid(),
-            Name = request.Name,
-            Surname = request.Surname,
+            AppUserId = request.UserId.ToString(),
             DrivingLicenseCategories = request.DrivingLicenseCategories,
             CreatedAt = DateTime.UtcNow,
             IsActive = true
@@ -33,8 +32,6 @@ public class DriverService : IDriverService
         var driver= await _driverRepository.GetByIdAsync(request.Id, true,ct);
         if(driver is null)
             throw new KeyNotFoundException("Driver not found");
-        driver.Name = request.Name;
-        driver.Surname = request.Surname;
         driver.DrivingLicenseCategories = request.DrivingLicenseCategories;
         await _driverRepository.UpdateAsync(driver, ct);
     }
@@ -49,8 +46,8 @@ public class DriverService : IDriverService
         return new GetDriverResponse
         {
             Id = driver.Id,
-            Name = driver.Name,
-            Surname = driver.Surname,
+            Name = driver.User?.Name ?? string.Empty,
+            Surname = driver.User?.Surname ?? string.Empty,
             DrivingLicenseCategories = driver.DrivingLicenseCategories.ToList()
         };
     }
@@ -61,13 +58,13 @@ public class DriverService : IDriverService
 
         if (!string.IsNullOrWhiteSpace(request.FullName))
         {
-            query = query.Where(x => EF.Functions.ILike(x.Name + " " + x.Surname, $"%{request.FullName}%"));
+            query = query.Where(x => EF.Functions.ILike(x.User.FullNameComputed, $"%{request.FullName}%"));
         }
 
         var totalCount = await query.CountAsync(ct);
 
         var drivers = await query
-            .OrderBy(x => x.Surname)
+            .OrderBy(x => x.User.Surname)
             .Skip(request.PageSize * (request.PageNumber - 1))
             .Take(request.PageSize)
             .ToListAsync(ct);
@@ -78,8 +75,8 @@ public class DriverService : IDriverService
             Drivers = drivers.Select(d => new GetDriverResponse
             {
                 Id = d.Id,
-                Name = d.Name,
-                Surname = d.Surname,
+                Name = d.User?.Name ?? string.Empty,
+                Surname = d.User?.Surname ?? string.Empty,
                 DrivingLicenseCategories = d.DrivingLicenseCategories.ToList()
             })
         };

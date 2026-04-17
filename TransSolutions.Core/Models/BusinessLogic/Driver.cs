@@ -9,8 +9,6 @@ public class Driver
 {
     [Key]
     public Guid Id { get; set; }
-    public string Name { get; set; }
-    public string Surname { get; set; }
     public IEnumerable<DrivingLicenseCategory> DrivingLicenseCategories { get; set; }
     public DateTime CreatedAt { get; set; }
     public bool IsActive { get; set; }

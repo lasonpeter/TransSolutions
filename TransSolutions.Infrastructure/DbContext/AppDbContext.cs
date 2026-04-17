@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using TransSolutions.Domain.Models.Auth;
 using TransSolutions.Domain.Models.BusinessLogic;
 
@@ -21,7 +22,6 @@ public class AppDbContext : IdentityDbContext<AppUser>
 
         modelBuilder.Entity<RefreshTokens>(entity => 
         {
-
             entity.HasIndex(e => e.Token).IsUnique();
 
             entity.HasOne(d => d.User)
@@ -29,13 +29,7 @@ public class AppDbContext : IdentityDbContext<AppUser>
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        modelBuilder.Entity<AppUser>(entity =>
-        {
-            entity.HasOne(x => x.Driver)
-                .WithOne(x => x.User)
-                .HasForeignKey<Driver>(x => x.AppUserId)
-                .OnDelete(DeleteBehavior.NoAction);
-        });
+        
         modelBuilder.Entity<Driver>(entity =>
         {
             entity.HasMany(x => x.RoadTrips)

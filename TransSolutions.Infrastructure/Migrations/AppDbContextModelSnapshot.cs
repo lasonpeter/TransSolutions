@@ -173,14 +173,21 @@ namespace TransSolutions.Infrastructure.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("FullName")
-                        .HasColumnType("text");
+                    b.Property<string>("FullNameComputed")
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("text")
+                        .HasComputedColumnSql("\"Name\" || ' ' || \"Surname\"", true);
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -202,6 +209,10 @@ namespace TransSolutions.Infrastructure.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
 
+                    b.Property<string>("Surname")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("boolean");
 
@@ -219,6 +230,26 @@ namespace TransSolutions.Infrastructure.Migrations
                         .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("AspNetUsers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "00000000-0000-0000-0000-000000000001",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "af97224d-5d0d-486f-a586-de45854d6923",
+                            Email = "admin@transsolutions.com",
+                            EmailConfirmed = true,
+                            LockoutEnabled = false,
+                            Name = "System",
+                            NormalizedEmail = "ADMIN@TRANSSOLUTIONS.COM",
+                            NormalizedUserName = "ADMIN@TRANSSOLUTIONS.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAECQ1CK+QRw46Z0UdbvYh1U83Qur9eGkd6zPDUwDbLfr04Hz+BzaZEiBXV4KKi6O3sA==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "550e8400-e29b-41d4-a716-446655440000",
+                            Surname = "Administrator",
+                            TwoFactorEnabled = false,
+                            UserName = "admin@transsolutions.com"
+                        });
                 });
 
             modelBuilder.Entity("TransSolutions.Domain.Models.Auth.RefreshTokens", b =>
@@ -280,14 +311,6 @@ namespace TransSolutions.Infrastructure.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Surname")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.HasKey("Id");
 

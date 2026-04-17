@@ -5,11 +5,10 @@ namespace TransSolutions.Domain.Models.Auth;
 
 public class AppUser : IdentityUser 
 {
-    
-    public string? FullName { get; set; }
+    public string Name { get; set; }
+    public string Surname { get; set; }
     
     // Good for searching/filtering in SQL
     public string FullNameComputed { get; private set; }
     public Driver? Driver { get; set; }
-    /*public Guid DriverId { get; set; }*/
 }

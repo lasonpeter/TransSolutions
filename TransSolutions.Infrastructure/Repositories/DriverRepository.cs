@@ -28,11 +28,11 @@ public class DriverRepository : IDriverRepository
         var query = _context.Drivers.AsQueryable();
         if (!track) query = query.AsNoTracking();
         
-        return await query.FirstOrDefaultAsync(x => x.Id == id, ct);
+        return await query.Include(x => x.User).FirstOrDefaultAsync(x => x.Id == id, ct);
     }
 
     public IQueryable<Driver> GetQueryable()
     {
-        return _context.Drivers.AsNoTracking();
+        return _context.Drivers.Include(x => x.User).AsNoTracking();
     }
 }

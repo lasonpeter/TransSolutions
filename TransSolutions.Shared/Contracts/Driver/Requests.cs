@@ -2,8 +2,8 @@ using TransSolutions.Shared.Enums.Vehicle;
 
 namespace TransSolutions.Shared.Contracts.Driver;
 
-public record CreateDriverRequest(String Name, String Surname, List<DrivingLicenseCategory> DrivingLicenseCategories);
-public record UpdateDriverRequest(Guid Id, String Name, String Surname, List<DrivingLicenseCategory> DrivingLicenseCategories);
+public record CreateDriverRequest(Guid UserId, List<DrivingLicenseCategory> DrivingLicenseCategories);
+public record UpdateDriverRequest(Guid Id, List<DrivingLicenseCategory> DrivingLicenseCategories);
 public record DeleteDriverRequest(Guid Id);
 public record GetDriverRequest(Guid Id);
 /// <summary>

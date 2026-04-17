@@ -22,7 +22,7 @@ public class Register : Endpoint<RegisterRequest>
 
     public override async Task HandleAsync(RegisterRequest req, CancellationToken ct)
     {
-        var user = new AppUser() { UserName = req.Email, Email = req.Email, FullName = req.FullName };
+        var user = new AppUser() { UserName = req.Email, Email = req.Email, Name = req.Name, Surname = req.Surname };
         var result = await _userManager.CreateAsync(user, req.Password);
         
         if (result.Succeeded)

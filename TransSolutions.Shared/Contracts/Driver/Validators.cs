@@ -6,8 +6,7 @@ public class CreateDriverValidator : AbstractValidator<CreateDriverRequest>
 {
     public CreateDriverValidator()
     {
-        RuleFor(x => x.Name).NotEmpty().MinimumLength(2).MaximumLength(100);
-        RuleFor(x => x.Surname).NotEmpty().MinimumLength(2).MaximumLength(100);
+        RuleFor(x => x.UserId).NotEmpty();
         RuleFor(x => x.DrivingLicenseCategories).NotEmpty();
     }
 }
@@ -17,8 +16,6 @@ public class UpdateDriverValidator : AbstractValidator<UpdateDriverRequest>
     public UpdateDriverValidator()
     {
         RuleFor(x => x.Id).NotEmpty();
-        RuleFor(x => x.Name).NotEmpty().MinimumLength(2).MaximumLength(100);
-        RuleFor(x => x.Surname).NotEmpty().MinimumLength(2).MaximumLength(100);
         RuleFor(x => x.DrivingLicenseCategories).NotEmpty();
     }
 }

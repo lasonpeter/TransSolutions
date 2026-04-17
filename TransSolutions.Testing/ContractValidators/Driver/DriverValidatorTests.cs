@@ -17,8 +17,7 @@ public class DriverValidatorTests
     public void CreateDriver_ValidRequest_Passes()
     {
         var request = new CreateDriverRequest(
-            "John",
-            "Doe",
+            Guid.NewGuid(),
             new List<DrivingLicenseCategory> { DrivingLicenseCategory.B }
         );
 
@@ -30,9 +29,17 @@ public class DriverValidatorTests
     [Fact]
     public void CreateDriver_EmptyLicense_Fails()
     {
-        var request = new CreateDriverRequest("John", "Doe", new List<DrivingLicenseCategory>());
+        var request = new CreateDriverRequest(Guid.NewGuid(), new List<DrivingLicenseCategory>());
         var result = _createValidator.TestValidate(request);
         result.ShouldHaveValidationErrorFor(x => x.DrivingLicenseCategories);
+    }
+
+    [Fact]
+    public void CreateDriver_EmptyUserId_Fails()
+    {
+        var request = new CreateDriverRequest(Guid.Empty, new List<DrivingLicenseCategory> { DrivingLicenseCategory.B });
+        var result = _createValidator.TestValidate(request);
+        result.ShouldHaveValidationErrorFor(x => x.UserId);
     }
 
     [Fact]
@@ -40,8 +47,6 @@ public class DriverValidatorTests
     {
         var request = new UpdateDriverRequest(
             Guid.NewGuid(),
-            "John",
-            "Doe",
             new List<DrivingLicenseCategory> { DrivingLicenseCategory.C }
         );
 
