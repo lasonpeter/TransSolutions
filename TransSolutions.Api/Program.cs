@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using TransSolutions.Domain.Interfaces.Repositories;
 using TransSolutions.Domain.Interfaces.Services;
 using TransSolutions.Domain.Models.Auth;
+using TransSolutions.Exceptions;
 using TransSolutions.Infrastructure.DbContext;
 using TransSolutions.Infrastructure.Repositories;
 using TransSolutions.Infrastructure.Services; // Ensure this is present
@@ -72,7 +73,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseResponseCaching();                                                                
 app.UseFastEndpoints();                                                                
-app.UseDefaultExceptionHandler();
+app.UseCustomExceptionHandler();
 
 app.MapFallback(async (HttpContext ctx) =>
 {

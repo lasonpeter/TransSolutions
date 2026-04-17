@@ -32,7 +32,6 @@
 
     <ItemGroup>
       <Folder Include="Endpoints\Driver\" />
-      <Folder Include="Exceptions\" />
     </ItemGroup>
 
 </Project>

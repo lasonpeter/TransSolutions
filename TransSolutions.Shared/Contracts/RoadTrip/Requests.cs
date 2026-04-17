@@ -26,8 +26,9 @@ public record GetRoadTripRequest
 
 public record GetRoadTripsRequest
 {
-    public Guid? DriverId { get; init; }
-    public Guid? VehicleId { get; init; }
+    public string? DriverName { get; init; }
+    
+    public string? VehicleName { get; init; }
     public DateTime? StartDate { get; init; }
     public DateTime? EndDate { get; init; }
     public int PageNumber { get; init; }= 1;

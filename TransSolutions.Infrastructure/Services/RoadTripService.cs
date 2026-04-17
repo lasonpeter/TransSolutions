@@ -1,9 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TransSolutions.Domain.Interfaces.Repositories;
 using TransSolutions.Domain.Interfaces.Services;
-using TransSolutions.Domain.Models.Auth;
 using TransSolutions.Domain.Models.BusinessLogic;
-using TransSolutions.Infrastructure.DbContext;
 using TransSolutions.Shared.Contracts.RoadTrip;
 using TransSolutions.Shared.Enums.Vehicle;
 
@@ -106,11 +104,11 @@ public class RoadTripService : IRoadTripService
     {
         var query = await _tripRepository.GetQueryable(ct);
 
-        if (request.DriverId.HasValue)
-            query = query.Where(x => x.DriverId == request.DriverId.Value);
+        if (request.DriverName is not null)
+            query = query.Where(x => x.Driver.User.FullName == request.DriverName);
 
-        if (request.VehicleId.HasValue)
-            query = query.Where(x => x.VehicleId == request.VehicleId.Value);
+        if (request.VehicleName is not null)
+            query = query.Where(x => x.Vehicle.Name == request.VehicleName);
 
         if (request.StartDate.HasValue)
             query = query.Where(x => x.StartTime >= request.StartDate.Value);

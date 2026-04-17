@@ -15,7 +15,7 @@ public class GetRoadTrips : Endpoint<GetRoadTripsRequest, GetRoadTripsResponse>
 
     public override void Configure()
     {
-        Get("/api/v1/road-trip/get-all");
+        Get("/api/v1/road-trip/get-road-trips");
     }
 
     public override async Task HandleAsync(GetRoadTripsRequest req, CancellationToken ct)
