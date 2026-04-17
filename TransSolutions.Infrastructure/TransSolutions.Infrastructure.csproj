@@ -28,8 +28,4 @@
       <ProjectReference Include="..\TransSolutions.Core\TransSolutions.Core.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Repositories\" />
-    </ItemGroup>
-
 </Project>

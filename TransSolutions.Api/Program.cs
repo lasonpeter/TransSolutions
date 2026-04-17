@@ -1,5 +1,6 @@
 
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Text;
 using FastEndpoints;
 using FastEndpoints.Security;
@@ -7,15 +8,17 @@ using FastEndpoints.Swagger;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using TransSolutions.Domain.Interfaces.Repositories;
 using TransSolutions.Domain.Interfaces.Services;
 using TransSolutions.Domain.Models.Auth;
 using TransSolutions.Infrastructure.DbContext;
+using TransSolutions.Infrastructure.Repositories;
 using TransSolutions.Infrastructure.Services; // Ensure this is present
 JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<AppDbContext>(options => 
+builder.Services.AddDbContextPool<AppDbContext>(options => 
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddIdentityCore<AppUser>()
@@ -24,6 +27,14 @@ builder.Services.AddIdentityCore<AppUser>()
 builder.Logging.ClearProviders().AddConsole();
 
 builder.Services.AddScoped<IIdentityService, IdentityService>();
+builder.Services.AddScoped<IDriverService,DriverService>();
+builder.Services.AddScoped<IVehicleService,VehicleService>();
+builder.Services.AddScoped<IDriverRepository, DriverRepository>();
+builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
+builder.Services.AddScoped<IRoadTripRepository, RoadTripRepository>();
+builder.Services.AddScoped<IRoadTripService, RoadTripService>();
+
+
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 builder.Services.AddAuthenticationJwtBearer(
@@ -45,7 +56,7 @@ builder.Services.AddAuthenticationJwtBearer(
         };
     });
 builder.Services.AddAuthorization();
-builder.Services.AddFastEndpoints().SwaggerDocument();
+builder.Services.AddFastEndpoints().SwaggerDocument().AddResponseCaching();
 
 var app = builder.Build();
 
@@ -59,8 +70,14 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseResponseCaching();                                                                
 app.UseFastEndpoints();                                                                
-app.UseDefaultExceptionHandler();                                                                                  
+app.UseDefaultExceptionHandler();
+
+app.MapFallback(async (HttpContext ctx) =>
+{
+    // Custom logic here if needed
+});
 if (app.Environment.IsDevelopment())
 {
     app.UseSwaggerGen();

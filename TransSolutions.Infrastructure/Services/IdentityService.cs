@@ -13,6 +13,7 @@ using TransSolutions.Domain.Interfaces.Services;
 using TransSolutions.Domain.Models.Auth;
 using TransSolutions.Infrastructure.DbContext;
 using TransSolutions.Shared.Contracts.Auth;
+using TransSolutions.Shared.CustomClaims;
 using JwtRegisteredClaimNames = System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames;
 namespace TransSolutions.Infrastructure.Services;
 
@@ -34,10 +35,10 @@ public class IdentityService : IIdentityService
     {
         var user = await _userManager.FindByEmailAsync(email);
         if (user == null) return null;
-
+        
         var isPasswordValid = await _userManager.CheckPasswordAsync(user, password);
         if (!isPasswordValid) return null;
-        var authData = GenerateAuthResponse(user);
+        var authData = await GenerateAuthResponse(user);
         
         var hashedRefreshToken = _userManager.PasswordHasher.HashPassword(user, authData.RefreshToken);
 
@@ -89,7 +90,7 @@ public class IdentityService : IIdentityService
         validStoredToken.IsUsed = true;
         _context.RefreshTokens.Update(validStoredToken);
 
-        var newResponse = GenerateAuthResponse(user);
+        var newResponse = await GenerateAuthResponse(user);
         
         var newHashedToken = _userManager.PasswordHasher.HashPassword(user, newResponse.RefreshToken);
         await _context.RefreshTokens.AddAsync(new RefreshTokens 
@@ -136,11 +137,11 @@ public class IdentityService : IIdentityService
         return principal;
     }
 
-    private RefreshResponseDto GenerateAuthResponse(AppUser user)
+    private async Task<RefreshResponseDto> GenerateAuthResponse(AppUser user)
     {
         string jwtId = Guid.NewGuid().ToString();
         var refreshToken = GenerateRefreshToken();
-        var token = GenerateAccessToken(user);
+        var token = await GenerateAccessToken(user);
         var response = new RefreshResponseDto(Token:token, RefreshToken:refreshToken, ExpiresIn: 15*60, Jti:jwtId);
         return response;
     }
@@ -152,19 +153,24 @@ public class IdentityService : IIdentityService
         return Convert.ToBase64String(randomNumber);
     }
     
-    private string GenerateAccessToken(AppUser user)
+    private async Task<string> GenerateAccessToken(AppUser user)
     {
+        var isDriver = _context.Users.Where(x => x.Id == user.Id).AsNoTracking().Select(x => x.Driver != null)
+            .FirstOrDefaultAsync();
         var handler = new JsonWebTokenHandler(); 
         var key = Encoding.UTF8.GetBytes(_jwtKey);
-    
+        var claims = new ClaimsIdentity(new[]
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email!),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+
+        });
+        if (await isDriver)
+            claims.AddClaim(new Claim(CustomClaims.DriverClaim, "true"));
         var tokenDescriptor = new SecurityTokenDescriptor
         {
-            Subject = new ClaimsIdentity(new[]
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email!),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()), // Add the JTI claim here
-            }),
+            Subject = claims,
             Expires = DateTime.UtcNow.AddMinutes(15),
             Issuer = _config["Jwt:Issuer"],
             Audience = _config["Jwt:Audience"],

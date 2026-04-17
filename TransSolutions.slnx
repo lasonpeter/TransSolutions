@@ -6,4 +6,5 @@
   <Project Path="TransSolutions.Core\TransSolutions.Core.csproj" />
   <Project Path="TransSolutions.Infrastructure/TransSolutions.Infrastructure.csproj" />
   <Project Path="TransSolutions.Shared/TransSolutions.Shared.csproj" />
+  <Project Path="TransSolutions.Testing/TransSolutions.Testing.csproj" />
 </Solution>

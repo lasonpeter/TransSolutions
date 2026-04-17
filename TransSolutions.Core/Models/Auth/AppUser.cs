@@ -7,4 +7,5 @@ public class AppUser : IdentityUser
 {
     public string? FullName { get; set; }
     public Driver? Driver { get; set; }
+    /*public Guid DriverId { get; set; }*/
 }

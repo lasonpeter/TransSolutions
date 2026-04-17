@@ -30,4 +30,9 @@
       <ProjectReference Include="..\TransSolutions.Infrastructure\TransSolutions.Infrastructure.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Endpoints\Driver\" />
+      <Folder Include="Exceptions\" />
+    </ItemGroup>
+
 </Project>

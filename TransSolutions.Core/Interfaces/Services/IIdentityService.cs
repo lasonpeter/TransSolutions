@@ -3,6 +3,8 @@ using TransSolutions.Shared.Contracts.Auth;
 
 namespace TransSolutions.Domain.Interfaces.Services;
 
+
+//TODO ALSO ADD REGISTRATION IN HERE
 public interface IIdentityService
 {
     Task<LoginResponse?> LoginAsync(string email, string password);
