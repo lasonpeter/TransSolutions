@@ -1,6 +1,7 @@
 using FastEndpoints;
 using TransSolutions.Domain.Interfaces.Services;
 using TransSolutions.Shared.Contracts.RoadTrip;
+using TransSolutions.Shared.CustomClaims;
 
 namespace TransSolutions.Endpoints.RoadTrip;
 
@@ -16,6 +17,7 @@ public class DeleteRoadTrip : Endpoint<DeleteRoadTripRequest>
     public override void Configure()
     {
         Delete("/api/v1/road-trip/delete");
+        Claims(CustomClaims.AdminClaim, CustomClaims.ManagerClaim);
     }
 
     public override async Task HandleAsync(DeleteRoadTripRequest req, CancellationToken ct)

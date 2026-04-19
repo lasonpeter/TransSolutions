@@ -6,6 +6,7 @@ using TransSolutions.Domain.Models.Auth;
 using TransSolutions.Shared.Contracts.Auth;
 using TransSolutions.Shared.CustomClaims;
 using TransSolutions.Shared.Enums.Auth;
+using TransSolutions.Api.Mappers;
 
 
 public class Register : Endpoint<RegisterRequest>
@@ -38,26 +39,19 @@ public class Register : Endpoint<RegisterRequest>
         var user = new AppUser() { UserName = req.Email, Email = req.Email, Name = req.Name, Surname = req.Surname };
         var result = await _userManager.CreateAsync(user, req.Password);
         
-        if (result.Succeeded)
+        this.ThrowIfInvalid(result);
+
+        var claimType = req.Role switch
         {
-            var claimType = req.Role switch
-            {
-                UserRole.Admin => CustomClaims.AdminClaim,
-                UserRole.Manager => CustomClaims.ManagerClaim,
-                UserRole.Driver => CustomClaims.DriverClaim,
-                _ => throw new ArgumentOutOfRangeException()
-            };
-            
-            await _userManager.AddClaimAsync(user, new Claim(claimType, "true"));
-            await Send.OkAsync();
-        }
-        else
-        {
-            foreach (var error in result.Errors)
-            {
-                AddError( error.Description,error.Code);
-            }
-            ThrowIfAnyErrors();
-        }
+            UserRole.Admin => CustomClaims.AdminClaim,
+            UserRole.Manager => CustomClaims.ManagerClaim,
+            UserRole.Driver => CustomClaims.DriverClaim,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+        
+        var claimResult = await _userManager.AddClaimAsync(user, new Claim(claimType, "true"));
+        this.ThrowIfInvalid(claimResult);
+        
+        await Send.OkAsync();
     }
 }

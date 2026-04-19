@@ -2,6 +2,7 @@ using FastEndpoints;
 using Microsoft.IdentityModel.JsonWebTokens;
 using System.Security.Claims;
 using TransSolutions.Domain.Interfaces.Services;
+using TransSolutions.Api.Mappers;
 
 namespace TransSolutions.Endpoints.Auth;
 
@@ -29,10 +30,9 @@ public class LogoutEndpoint : EndpointWithoutRequest
             return;
         }
 
-        if (await _identityService.LogoutAsync(userId))
-            await Send.OkAsync();
-        else
-            await Send.ErrorsAsync(400, ct);
+        var success = await _identityService.LogoutAsync(userId);
+        this.ThrowIfFailure(success, "Logout failed");
         
+        await Send.OkAsync();
     }
 }

@@ -19,14 +19,23 @@ public class CreateRoadTrip : Endpoint<CreateRoadTripRequest,CreateRoadTripRespo
     {
         Post("/api/v1/road-trip/create");
         Claims(CustomClaims.DriverClaim);
+        Claims(CustomClaims.AdminClaim, CustomClaims.ManagerClaim);
     }
 
     public override async Task HandleAsync(CreateRoadTripRequest req, CancellationToken ct)
     {
-        var userId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
-        if (!Guid.TryParse(userId, out var id))
-            await Send.UnauthorizedAsync(ct);
-        var response = await _roadTripService.CreateTrip(req, id,ct);
-        await Send.OkAsync(response, ct);
+        try
+        {
+            var userId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            if (!Guid.TryParse(userId, out var id))
+                await Send.UnauthorizedAsync(ct);
+            var response = await _roadTripService.CreateTrip(req, id, ct);
+            await Send.OkAsync(response, ct);
+        }
+        catch (Exception e)
+        {
+            AddError(e.Message);
+            ThrowIfAnyErrors();
+        }
     }
 }
