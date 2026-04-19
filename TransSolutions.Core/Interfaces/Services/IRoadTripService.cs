@@ -18,4 +18,7 @@ public interface IRoadTripService
     
     // Gets a list of road trips
     Task<GetRoadTripsResponse> GetTrips(GetRoadTripsRequest request, CancellationToken ct);
+
+    // Gets a list of road trips by device ID
+    Task<GetRoadTripsResponse> GetTripsByDeviceId(GetRoadTripsByDeviceIdRequest request, CancellationToken ct);
 }

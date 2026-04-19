@@ -9,10 +9,10 @@ namespace TransSolutions.Infrastructure.Services;
 
 public class RoadTripService : IRoadTripService
 {
-
-    private readonly IRoadTripRepository _tripRepository;
     private readonly IDriverRepository _driverRepository;
     private readonly IVehicleRepository _vehicleRepository;
+    private readonly IRoadTripRepository _tripRepository;
+
     public RoadTripService(IDriverRepository driverRepository, IVehicleRepository vehicleRepository, IRoadTripRepository tripRepository)
     {
         _driverRepository = driverRepository;
@@ -22,18 +22,22 @@ public class RoadTripService : IRoadTripService
 
     public async Task<CreateRoadTripResponse> CreateTrip(CreateRoadTripRequest request, Guid userId, CancellationToken ct)
     {
-        Console.WriteLine(userId);
-        var driver= _driverRepository.GetQueryable().FirstOrDefault(x => x.AppUserId == userId.ToString());
-        if(driver is null)
+        var driver = await _driverRepository.GetQueryable()
+            .FirstOrDefaultAsync(x => x.AppUserId == userId.ToString(), ct);
+
+        if (driver == null)
             throw new KeyNotFoundException("Driver not found");
-        var car= await _vehicleRepository.GetByIdAsync(request.CarId, ct: ct);
-        if(car is null)
+
+        var vehicle = await _vehicleRepository.GetByIdAsync(request.CarId, track: false, ct);
+
+        if (vehicle == null)
             throw new KeyNotFoundException("Car not found");
+
         bool isAllowed = false;
-        switch ( car.VehicleType)
+        switch (vehicle.VehicleType)
         {
             case VehicleType.Car:
-                if (driver.DrivingLicenseCategories.Contains(DrivingLicenseCategory.B) || driver.DrivingLicenseCategories.Contains(DrivingLicenseCategory.C) )
+                if (driver.DrivingLicenseCategories.Contains(DrivingLicenseCategory.B) || driver.DrivingLicenseCategories.Contains(DrivingLicenseCategory.C))
                     isAllowed = true;
                 break;
             case VehicleType.Truck:
@@ -55,20 +59,20 @@ public class RoadTripService : IRoadTripService
         if (!isAllowed)
             throw new Exception("Invalid driving license category");
 
-
         var roadTrip = new RoadTrip()
         {
             Id = Guid.NewGuid(),
             DriverId = driver.Id,
-            Distance = request.Distance,
-            AverageFuelConsumption = request.AverageFuelConsumption,
+            VehicleId = request.CarId,
+            DeviceId = request.DeviceId,
             StartTime = request.StartDate,
             EndTime = request.EndDate,
-            VehicleId = car.Id
+            Distance = request.Distance,
+            AverageFuelConsumption = request.AverageFuelConsumption
         };
 
         await _tripRepository.AddAsync(roadTrip, ct);
-        
+
         return new CreateRoadTripResponse()
         {
             Id = roadTrip.Id
@@ -78,22 +82,21 @@ public class RoadTripService : IRoadTripService
     public async Task DeleteTrip(DeleteRoadTripRequest request, CancellationToken ct)
     {
         var trip = await _tripRepository.GetByIdAsync(request.Id, track: true, ct);
-        if (trip is null)
-            throw new KeyNotFoundException("Trip not found");
-
+        if (trip == null) throw new KeyNotFoundException("Trip not found");
         await _tripRepository.DeleteAsync(trip, ct);
     }
 
     public async Task<GetRoadTripResponse> GetTrip(GetRoadTripRequest request, CancellationToken ct)
     {
         var trip = await _tripRepository.GetByIdAsync(request.Id, track: false, ct);
-        if (trip is null)
-            throw new KeyNotFoundException("Trip not found");
+        if (trip == null) throw new KeyNotFoundException("Trip not found");
+
         return new GetRoadTripResponse
         {
             Id = trip.Id,
             DriverId = trip.DriverId,
             VehicleId = trip.VehicleId,
+            DeviceId = trip.DeviceId,
             StartDate = trip.StartTime,
             EndDate = trip.EndTime,
             Distance = trip.Distance,
@@ -105,23 +108,29 @@ public class RoadTripService : IRoadTripService
     {
         var query = await _tripRepository.GetQueryable(ct);
 
-        if (request.DriverName is not null)
-            query = query.Where(x => x.Driver.User.FullNameComputed == request.DriverName);
+        if (!string.IsNullOrEmpty(request.DriverName))
+        {
+            query = query.Where(x => x.Driver.User.FullNameComputed.Contains(request.DriverName));
+        }
 
-        if (request.VehicleName is not null)
-            query = query.Where(x => x.Vehicle.Name == request.VehicleName);
+        if (!string.IsNullOrEmpty(request.VehicleName))
+        {
+            query = query.Where(x => x.Vehicle.Name.Contains(request.VehicleName));
+        }
 
         if (request.StartDate.HasValue)
+        {
             query = query.Where(x => x.StartTime >= request.StartDate.Value);
+        }
 
         if (request.EndDate.HasValue)
+        {
             query = query.Where(x => x.EndTime <= request.EndDate.Value);
+        }
 
         var totalCount = await query.CountAsync(ct);
-
         var trips = await query
-            .OrderByDescending(x => x.StartTime)
-            .Skip(request.PageSize * (request.PageNumber - 1))
+            .Skip((request.PageNumber - 1) * request.PageSize)
             .Take(request.PageSize)
             .ToListAsync(ct);
 
@@ -133,6 +142,36 @@ public class RoadTripService : IRoadTripService
                 Id = x.Id,
                 DriverId = x.DriverId,
                 VehicleId = x.VehicleId,
+                DeviceId = x.DeviceId,
+                StartDate = x.StartTime,
+                EndDate = x.EndTime,
+                Distance = x.Distance,
+                AverageFuelConsumption = x.AverageFuelConsumption
+            })
+        };
+    }
+
+    public async Task<GetRoadTripsResponse> GetTripsByDeviceId(GetRoadTripsByDeviceIdRequest request, CancellationToken ct)
+    {
+        var query = await _tripRepository.GetQueryable(ct);
+        query = query.Where(x => x.DeviceId == request.DeviceId);
+
+        var totalCount = await query.CountAsync(ct);
+        var trips = await query
+            .OrderByDescending(x => x.StartTime)
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize)
+            .ToListAsync(ct);
+
+        return new GetRoadTripsResponse
+        {
+            TotalCount = totalCount,
+            RoadTrips = trips.Select(x => new GetRoadTripResponse
+            {
+                Id = x.Id,
+                DriverId = x.DriverId,
+                VehicleId = x.VehicleId,
+                DeviceId = x.DeviceId,
                 StartDate = x.StartTime,
                 EndDate = x.EndTime,
                 Distance = x.Distance,

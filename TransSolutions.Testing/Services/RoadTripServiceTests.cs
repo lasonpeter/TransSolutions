@@ -55,6 +55,7 @@ public class RoadTripServiceTests
         var request = new CreateRoadTripRequest
         {
             CarId = vehicle.Id,
+            DeviceId = Guid.NewGuid(),
             StartDate = DateTime.Now,
             EndDate = DateTime.Now.AddHours(1),
             Distance = 100,
@@ -62,7 +63,7 @@ public class RoadTripServiceTests
         };
 
         _driverRepositoryMock.Setup(r => r.GetQueryable())
-            .Returns(new List<Driver> { driver }.AsQueryable());
+            .Returns(new List<Driver> { driver }.AsQueryable().BuildMock());
         _vehicleRepositoryMock.Setup(r => r.GetByIdAsync(vehicle.Id, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(vehicle);
         
@@ -85,10 +86,10 @@ public class RoadTripServiceTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var request = new CreateRoadTripRequest { CarId = Guid.NewGuid() };
+        var request = new CreateRoadTripRequest { CarId = Guid.NewGuid(), DeviceId = Guid.NewGuid() };
 
         _driverRepositoryMock.Setup(r => r.GetQueryable())
-            .Returns(new List<Driver>().AsQueryable());
+            .Returns(new List<Driver>().AsQueryable().BuildMock());
 
         // Act & Assert
         await Assert.ThrowsAsync<KeyNotFoundException>(() => _sut.CreateTrip(request, userId, CancellationToken.None));
@@ -99,10 +100,10 @@ public class RoadTripServiceTests
     {
         var userId = Guid.NewGuid();
         var driver = new Driver { AppUserId = userId.ToString() };
-        var request = new CreateRoadTripRequest { CarId = Guid.NewGuid() };
+        var request = new CreateRoadTripRequest { CarId = Guid.NewGuid(), DeviceId = Guid.NewGuid() };
 
         _driverRepositoryMock.Setup(r => r.GetQueryable())
-            .Returns(new List<Driver> { driver }.AsQueryable());
+            .Returns(new List<Driver> { driver }.AsQueryable().BuildMock());
         _vehicleRepositoryMock.Setup(r => r.GetByIdAsync(request.CarId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Vehicle)null!);
 
@@ -111,13 +112,14 @@ public class RoadTripServiceTests
     }
 
     [Fact]
-    public async Task GetTrip_ShouldReturnDriverIdAndVehicleId()
+    public async Task GetTrip_ShouldReturnDeviceId()
     {
         var trip = new RoadTrip
         {
             Id = Guid.NewGuid(),
             DriverId = Guid.NewGuid(),
             VehicleId = Guid.NewGuid(),
+            DeviceId = Guid.NewGuid(),
             StartTime = DateTime.Now,
             EndTime = DateTime.Now.AddHours(2),
             Distance = 150,
@@ -130,16 +132,18 @@ public class RoadTripServiceTests
 
         Assert.Equal(trip.DriverId, response.DriverId);
         Assert.Equal(trip.VehicleId, response.VehicleId);
+        Assert.Equal(trip.DeviceId, response.DeviceId);
     }
 
     [Fact]
-    public async Task GetTrips_ShouldReturnDriverIdAndVehicleId()
+    public async Task GetTrips_ShouldReturnDeviceId()
     {
         var trip = new RoadTrip
         {
             Id = Guid.NewGuid(),
             DriverId = Guid.NewGuid(),
             VehicleId = Guid.NewGuid(),
+            DeviceId = Guid.NewGuid(),
             StartTime = DateTime.Now,
             EndTime = DateTime.Now.AddHours(2),
             Distance = 150,
@@ -154,7 +158,24 @@ public class RoadTripServiceTests
         var response = await _sut.GetTrips(new GetRoadTripsRequest(), CancellationToken.None);
 
         var tripResponse = response.RoadTrips.First();
-        Assert.Equal(trip.DriverId, tripResponse.DriverId);
-        Assert.Equal(trip.VehicleId, tripResponse.VehicleId);
+        Assert.Equal(trip.DeviceId, tripResponse.DeviceId);
+    }
+
+    [Fact]
+    public async Task GetTripsByDeviceId_ShouldReturnCorrectTrips()
+    {
+        var deviceId = Guid.NewGuid();
+        var trip1 = new RoadTrip { DeviceId = deviceId, StartTime = DateTime.Now };
+        var trip2 = new RoadTrip { DeviceId = Guid.NewGuid(), StartTime = DateTime.Now };
+        
+        var queryable = new List<RoadTrip> { trip1, trip2 }.AsQueryable().BuildMock();
+
+        _tripRepositoryMock.Setup(r => r.GetQueryable(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(queryable);
+
+        var response = await _sut.GetTripsByDeviceId(new GetRoadTripsByDeviceIdRequest { DeviceId = deviceId }, CancellationToken.None);
+
+        Assert.Single(response.RoadTrips);
+        Assert.Equal(deviceId, response.RoadTrips.First().DeviceId);
     }
 }

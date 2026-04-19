@@ -5,6 +5,7 @@ public record GetRoadTripResponse
     public Guid Id { get; init; }
     public Guid DriverId { get; init; }
     public Guid VehicleId { get; init; }
+    public Guid DeviceId { get; init; }
     public DateTime StartDate { get; init; }
     public DateTime EndDate { get; init; }
     public float Distance { get; init; }

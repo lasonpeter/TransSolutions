@@ -42,6 +42,10 @@ public class RoadTripRepository : IRoadTripRepository
 
     public async Task<IQueryable<RoadTrip>> GetQueryable(CancellationToken ct)
     {
-        return _context.RoadTrips.AsNoTracking();
+        return _context.RoadTrips
+            .Include(x => x.Driver)
+                .ThenInclude(x => x.User)
+            .Include(x => x.Vehicle)
+            .AsNoTracking();
     }
 }

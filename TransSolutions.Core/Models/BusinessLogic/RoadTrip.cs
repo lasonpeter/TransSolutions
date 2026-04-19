@@ -11,6 +11,7 @@ public class RoadTrip
     public DateTime StartTime { get; set; }
     public DateTime EndTime { get; set; }
     public float AverageFuelConsumption { get; set; }
+    public Guid DeviceId { get; set; }
     
     public Vehicle Vehicle { get; set; }
     public Guid VehicleId { get; set; }
