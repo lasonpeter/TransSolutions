@@ -1,5 +1,6 @@
 using FluentValidation.TestHelper;
 using TransSolutions.Shared.Contracts.Auth;
+using TransSolutions.Shared.Enums.Auth;
 using Xunit;
 
 namespace TransSolutions.Testing.ContractValidators.Auth;
@@ -13,7 +14,7 @@ public class AuthValidatorTests
     [Fact]
     public void Register_ValidRequest_Passes()
     {
-        var request = new RegisterRequest("test@example.com", "password123", "John", "Doe");
+        var request = new RegisterRequest("test@example.com", "password123", "John", "Doe", UserRole.Driver);
         var result = _registerValidator.TestValidate(request);
         result.ShouldNotHaveAnyValidationErrors();
     }
@@ -23,7 +24,7 @@ public class AuthValidatorTests
     [InlineData("invalid-email")]
     public void Register_InvalidEmail_Fails(string email)
     {
-        var request = new RegisterRequest(email, "password123", "John", "Doe");
+        var request = new RegisterRequest(email, "password123", "John", "Doe", UserRole.Driver);
         var result = _registerValidator.TestValidate(request);
         result.ShouldHaveValidationErrorFor(x => x.Email);
     }

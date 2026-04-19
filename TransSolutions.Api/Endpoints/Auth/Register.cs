@@ -1,8 +1,11 @@
 // WebApi/Endpoints/Auth/RegisterEndpoint.cs
 using FastEndpoints;
 using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
 using TransSolutions.Domain.Models.Auth;
 using TransSolutions.Shared.Contracts.Auth;
+using TransSolutions.Shared.CustomClaims;
+using TransSolutions.Shared.Enums.Auth;
 
 
 public class Register : Endpoint<RegisterRequest>
@@ -17,17 +20,44 @@ public class Register : Endpoint<RegisterRequest>
     public override void Configure()
     {
         Post("api/v1/auth/register");
-        AllowAnonymous();
     }
 
     public override async Task HandleAsync(RegisterRequest req, CancellationToken ct)
     {
+        var isAdmin = User.HasClaim(c => c.Type == CustomClaims.AdminClaim && c.Value == "true");
+        var isManager = User.HasClaim(c => c.Type == CustomClaims.ManagerClaim && c.Value == "true");
+
+        bool canCreate = isAdmin || (isManager && req.Role == UserRole.Driver);
+
+        if (!canCreate)
+        {
+            await Send.ErrorsAsync(403, ct);
+            return;
+        }
+
         var user = new AppUser() { UserName = req.Email, Email = req.Email, Name = req.Name, Surname = req.Surname };
         var result = await _userManager.CreateAsync(user, req.Password);
         
         if (result.Succeeded)
+        {
+            var claimType = req.Role switch
+            {
+                UserRole.Admin => CustomClaims.AdminClaim,
+                UserRole.Manager => CustomClaims.ManagerClaim,
+                UserRole.Driver => CustomClaims.DriverClaim,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+            
+            await _userManager.AddClaimAsync(user, new Claim(claimType, "true"));
             await Send.OkAsync();
+        }
         else
-            await Send.ErrorsAsync(400, ct);
+        {
+            foreach (var error in result.Errors)
+            {
+                AddError( error.Description,error.Code);
+            }
+            ThrowIfAnyErrors();
+        }
     }
 }

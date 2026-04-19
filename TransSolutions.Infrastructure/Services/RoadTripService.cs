@@ -89,7 +89,6 @@ public class RoadTripService : IRoadTripService
         var trip = await _tripRepository.GetByIdAsync(request.Id, track: false, ct);
         if (trip is null)
             throw new KeyNotFoundException("Trip not found");
-
         return new GetRoadTripResponse
         {
             Id = trip.Id,

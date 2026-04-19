@@ -5,6 +5,7 @@ using System.Text;
 using FastEndpoints;
 using FastEndpoints.Security;
 using FastEndpoints.Swagger;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -23,6 +24,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContextPool<AppDbContext>(options =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+    options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
 });
 
 builder.Services.AddIdentityCore<AppUser>()
@@ -45,6 +47,25 @@ builder.Services.AddAuthenticationJwtBearer(
     _ => { }, 
     bearerOptions =>
     {
+        bearerOptions.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                string authHeader = context.Request.Headers.Authorization;
+    
+                if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Token = authHeader.Substring("Bearer ".Length).Trim();
+                }
+                
+                else if (context.Request.Cookies.TryGetValue("AccessToken", out var cookieToken))
+                {
+                    context.Token = cookieToken;
+                }
+
+                return Task.CompletedTask;
+            }
+        };
         bearerOptions.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
@@ -62,8 +83,23 @@ builder.Services.AddAuthenticationJwtBearer(
 builder.Services.AddAuthorization();
 builder.Services.AddFastEndpoints().SwaggerDocument().AddResponseCaching();
 
+
+//CORS
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowViteApp",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173") // Your React port
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
+
 var app = builder.Build();
 
+app.UseCors("AllowViteApp");
 // non production code just for simpler testing for you guys
 if (app.Environment.IsDevelopment())
 {

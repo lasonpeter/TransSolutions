@@ -30,11 +30,10 @@ public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
             EmailConfirmed = true,
             Name = "System",
             Surname = "Administrator",
-            SecurityStamp = "550e8400-e29b-41d4-a716-446655440000"
+            SecurityStamp = "550e8400-e29b-41d4-a716-446655440000",
+            ConcurrencyStamp = "3bb25199-a0e6-4a2b-a436-056333a7c0bf",
+            PasswordHash = "AQAAAAIAAYagAAAAEFDb72kLJo51bqUXO3OywPOfpQn9zMGtpK2qVXk/RmiAV9HeFySmD65lsYUndnBlJw=="
         };
-
-        var passwordHasher = new PasswordHasher<AppUser>();
-        admin.PasswordHash = passwordHasher.HashPassword(admin, "8gBd32Za-if75hg");
 
         builder.HasData(admin);
     }

@@ -1,13 +1,16 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using TransSolutions.Domain.Models.Auth;
 using TransSolutions.Domain.Models.BusinessLogic;
+using TransSolutions.Shared.CustomClaims;
 
 namespace TransSolutions.Infrastructure.DbContext;
 
 public class AppDbContext : IdentityDbContext<AppUser>
 {
+    private const string AdminId = "00000000-0000-0000-0000-000000000001";
     public DbSet<RefreshTokens> RefreshTokens { get; set; }
     public DbSet<Driver> Drivers { get; set; }
     public DbSet<Vehicle> Vehicles { get; set; }
@@ -19,6 +22,7 @@ public class AppDbContext : IdentityDbContext<AppUser>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
         modelBuilder.Entity<RefreshTokens>(entity => 
         {
@@ -43,6 +47,14 @@ public class AppDbContext : IdentityDbContext<AppUser>
                 .WithOne(x => x.Vehicle)
                 .HasForeignKey(x => x.VehicleId)
                 .OnDelete(DeleteBehavior.NoAction);
+        });
+
+        modelBuilder.Entity<IdentityUserClaim<string>>().HasData(new IdentityUserClaim<string>
+        {
+            Id = 2,
+            UserId = AdminId,
+            ClaimType = CustomClaims.AdminClaim,
+            ClaimValue = "true"
         });
     }
 }

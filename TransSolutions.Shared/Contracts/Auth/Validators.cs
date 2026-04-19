@@ -10,6 +10,7 @@ public class RegisterValidator : AbstractValidator<RegisterRequest>
         RuleFor(x => x.Password).NotEmpty().MinimumLength(6);
         RuleFor(x => x.Name).NotEmpty().MinimumLength(2).MaximumLength(100);
         RuleFor(x => x.Surname).NotEmpty().MinimumLength(2).MaximumLength(100);
+        RuleFor(x => x.Role).IsInEnum();
     }
 }
 

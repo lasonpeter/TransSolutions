@@ -123,6 +123,29 @@ public class IdentityService : IIdentityService
         return await _context.SaveChangesAsync() > 0;
     }
 
+    public async Task<GetUsersResponse> GetUsers(GetUsersRequest request, CancellationToken ct)
+    {
+        var query = _context.Users.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(request.FullName))
+        {
+            query = query.Where(x => EF.Functions.ILike(x.FullNameComputed, $"%{request.FullName}%"));
+        }
+
+        var totalCount = await query.CountAsync(ct);
+
+        var users = await query
+            .OrderBy(x => x.Surname)
+            .Skip(request.PageSize * (request.PageNumber - 1))
+            .Take(request.PageSize)
+            .ToListAsync(ct);
+
+        return new GetUsersResponse(
+            Users: users.Select(u => new GetUserResponse(u.Id, u.Email ?? string.Empty, u.Name, u.Surname)),
+            TotalCount: totalCount
+        );
+    }
+
     private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -155,22 +178,31 @@ public class IdentityService : IIdentityService
     
     private async Task<string> GenerateAccessToken(AppUser user)
     {
-        var isDriver = _context.Users.Where(x => x.Id == user.Id).AsNoTracking().Select(x => x.Driver != null)
-            .FirstOrDefaultAsync();
         var handler = new JsonWebTokenHandler(); 
         var key = Encoding.UTF8.GetBytes(_jwtKey);
-        var claims = new ClaimsIdentity(new[]
+        
+        var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id),
             new Claim(JwtRegisteredClaimNames.Email, user.Email!),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+        };
 
-        });
-        if (await isDriver)
-            claims.AddClaim(new Claim(CustomClaims.DriverClaim, "true"));
+        var userClaims = await _userManager.GetClaimsAsync(user);
+        claims.AddRange(userClaims);
+
+        // Backup check for Driver if not in claims
+        if (claims.All(c => c.Type != CustomClaims.DriverClaim))
+        {
+            var isDriver = await _context.Users.Where(x => x.Id == user.Id).AsNoTracking().Select(x => x.Driver != null)
+                .FirstOrDefaultAsync();
+            if (isDriver)
+                claims.Add(new Claim(CustomClaims.DriverClaim, "true"));
+        }
+
         var tokenDescriptor = new SecurityTokenDescriptor
         {
-            Subject = claims,
+            Subject = new ClaimsIdentity(claims),
             Expires = DateTime.UtcNow.AddMinutes(15),
             Issuer = _config["Jwt:Issuer"],
             Audience = _config["Jwt:Audience"],
