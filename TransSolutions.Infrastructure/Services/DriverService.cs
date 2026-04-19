@@ -13,6 +13,17 @@ public class DriverService : IDriverService
 
     public async Task<CreateDriverResponse> CreateDriver(CreateDriverRequest request, CancellationToken ct)
     {
+        var existingDriver = await _driverRepository.GetQueryable()
+            .FirstOrDefaultAsync(x => x.AppUserId == request.UserId.ToString(), ct);
+
+        if (existingDriver != null)
+        {
+            existingDriver.IsActive = true;
+            existingDriver.DrivingLicenseCategories = request.DrivingLicenseCategories;
+            await _driverRepository.UpdateAsync(existingDriver, ct);
+            return new CreateDriverResponse { Id = existingDriver.Id };
+        }
+
         var driver = new Driver
         {
             Id = Guid.NewGuid(),
@@ -55,6 +66,11 @@ public class DriverService : IDriverService
     public async Task<GetDriversResponse> GetDrivers(GetDriversRequest request, CancellationToken ct)
     {
         var query = _driverRepository.GetQueryable();
+
+        if (request.IsActive.HasValue)
+        {
+            query = query.Where(x => x.IsActive == request.IsActive.Value);
+        }
 
         if (!string.IsNullOrWhiteSpace(request.FullName))
         {

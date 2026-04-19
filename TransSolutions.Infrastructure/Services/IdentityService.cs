@@ -46,7 +46,7 @@ public class IdentityService : IIdentityService
         { 
             Id = Guid.NewGuid(),
             Token = hashedRefreshToken, 
-            JwtId = authData.Jti, // Now we are tracking which JWT this belongs to
+            JwtId = authData.Jti, 
             UserId = user.Id,
             ExpiryDate = DateTime.UtcNow.AddDays(1), 
             CreatedAt = DateTime.UtcNow,
@@ -144,6 +144,46 @@ public class IdentityService : IIdentityService
             Users: users.Select(u => new GetUserResponse(u.Id, u.Email ?? string.Empty, u.Name, u.Surname)),
             TotalCount: totalCount
         );
+    }
+
+    public async Task<IdentityResult> UpdateUserAsync(string userId, UpdateUserRequest request, ClaimsPrincipal currentUser)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            return IdentityResult.Failed(new IdentityError { Description = "User not found." });
+
+        if (!string.IsNullOrWhiteSpace(request.Name))
+            user.Name = request.Name;
+
+        if (!string.IsNullOrWhiteSpace(request.Surname))
+            user.Surname = request.Surname;
+
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+            return result;
+
+        if (!string.IsNullOrWhiteSpace(request.Password))
+        {
+            // Managers cannot change Admin's password
+            if (currentUser.HasClaim(c => c.Type == CustomClaims.ManagerClaim) && 
+                !currentUser.HasClaim(c => c.Type == CustomClaims.AdminClaim))
+            {
+                var targetClaims = await _userManager.GetClaimsAsync(user);
+                if (targetClaims.Any(c => c.Type == CustomClaims.AdminClaim))
+                {
+                    return IdentityResult.Failed(new IdentityError 
+                    { 
+                        Code = "Forbidden", 
+                        Description = "Managers are not allowed to change Admin passwords." 
+                    });
+                }
+            }
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            result = await _userManager.ResetPasswordAsync(user, token, request.Password);
+        }
+
+        return result;
     }
 
     private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)

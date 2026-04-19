@@ -1,4 +1,5 @@
-using TransSolutions.Application.DTOs.Auth;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
 using TransSolutions.Shared.Contracts.Auth;
 
 namespace TransSolutions.Domain.Interfaces.Services;
@@ -19,4 +20,7 @@ public interface IIdentityService
     
     // Gets a paginated list of users with search by full name
     Task<GetUsersResponse> GetUsers(GetUsersRequest request, CancellationToken ct);
+
+    // Updates user details and password
+    Task<IdentityResult> UpdateUserAsync(string userId, UpdateUserRequest request, ClaimsPrincipal currentUser);
 }

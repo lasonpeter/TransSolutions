@@ -31,3 +31,13 @@ public class RefreshValidator : AbstractValidator<RefreshRequest>
         RuleFor(x => x.RefreshToken).NotEmpty();
     }
 }
+
+public class UpdateUserValidator : AbstractValidator<UpdateUserRequest>
+{
+    public UpdateUserValidator()
+    {
+        RuleFor(x => x.Name).MinimumLength(2).MaximumLength(100).When(x => !string.IsNullOrEmpty(x.Name));
+        RuleFor(x => x.Surname).MinimumLength(2).MaximumLength(100).When(x => !string.IsNullOrEmpty(x.Surname));
+        RuleFor(x => x.Password).MinimumLength(6).When(x => !string.IsNullOrEmpty(x.Password));
+    }
+}

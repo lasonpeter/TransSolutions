@@ -21,6 +21,6 @@ public class DeleteDriver : Endpoint<DeleteDriverRequest>
     public override async Task HandleAsync(DeleteDriverRequest req, CancellationToken ct)
     {
         await _driverService.DeleteDriver(req, ct);
-        await Send.OkAsync(ct);
+        await Send.NoContentAsync(ct);
     }
 }

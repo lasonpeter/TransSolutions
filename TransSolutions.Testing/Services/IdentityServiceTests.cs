@@ -9,6 +9,7 @@ using Xunit;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Reflection;
+using TransSolutions.Shared.CustomClaims;
 
 namespace TransSolutions.Testing.Services;
 
@@ -41,8 +42,32 @@ public class IdentityServiceTests
             .Setup(s => s.GetClaimsAsync(It.IsAny<AppUser>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<Claim>());
 
-        _userManager = new UserManager<AppUser>(
+        var userManagerMock = new Mock<UserManager<AppUser>>(
             userStoreMock.Object, null!, new PasswordHasher<AppUser>(), null!, null!, null!, null!, null!, null!);
+
+        userManagerMock.Setup(m => m.FindByIdAsync(It.IsAny<string>()))
+            .ReturnsAsync((string id) => _context.Users.FirstOrDefault(u => u.Id == id));
+
+        userManagerMock.Setup(m => m.UpdateAsync(It.IsAny<AppUser>()))
+            .ReturnsAsync(IdentityResult.Success);
+
+        userManagerMock.Setup(m => m.GeneratePasswordResetTokenAsync(It.IsAny<AppUser>()))
+            .ReturnsAsync("reset-token");
+
+        userManagerMock.Setup(m => m.ResetPasswordAsync(It.IsAny<AppUser>(), It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(IdentityResult.Success);
+        
+        userManagerMock.Setup(m => m.FindByEmailAsync(It.IsAny<string>()))
+            .ReturnsAsync((string email) => _context.Users.FirstOrDefault(u => u.NormalizedEmail == email.ToUpper()));
+
+        userManagerMock.Setup(m => m.CheckPasswordAsync(It.IsAny<AppUser>(), It.IsAny<string>()))
+            .ReturnsAsync((AppUser u, string p) => 
+                new PasswordHasher<AppUser>().VerifyHashedPassword(u, u.PasswordHash!, p) == PasswordVerificationResult.Success);
+
+        userManagerMock.Setup(m => m.GetClaimsAsync(It.IsAny<AppUser>()))
+            .ReturnsAsync(new List<Claim>());
+
+        _userManager = userManagerMock.Object;
 
         _configurationMock = new Mock<IConfiguration>();
         _configurationMock.Setup(c => c["Jwt:Key"]).Returns("key-that-is-at-least-32-chars-yes");
@@ -150,5 +175,70 @@ public class IdentityServiceTests
         // Assert
         Assert.Equal(2, response.TotalCount);
         Assert.Equal(2, response.Users.Count());
+    }
+
+    [Fact]
+    public async Task UpdateUserAsync_ShouldUpdateDetailsAndReturnSuccess()
+    {
+        // Arrange
+        var user = new AppUser { Id = Guid.NewGuid().ToString(), Name = "Old", Surname = "Name" };
+        typeof(AppUser).GetProperty(nameof(AppUser.FullNameComputed))
+            ?.SetValue(user, "Old Name");
+        
+        await _context.Users.AddAsync(user);
+        await _context.SaveChangesAsync();
+
+        var request = new UpdateUserRequest("NewName", "NewSurname", "NewPassword123");
+        var currentUser = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(CustomClaims.AdminClaim, "true") }, "TestAuth"));
+
+        // Act
+        var result = await _sut.UpdateUserAsync(user.Id, request, currentUser);
+
+        // Assert
+        Assert.True(result.Succeeded);
+        var updatedUser = await _context.Users.FindAsync(user.Id);
+        Assert.Equal("NewName", updatedUser!.Name);
+        Assert.Equal("NewSurname", updatedUser.Surname);
+    }
+
+    [Fact]
+    public async Task UpdateUserAsync_ShouldReturnFailure_WhenManagerTriesToChangeAdminPassword()
+    {
+        // Arrange
+        var adminUser = new AppUser { Id = Guid.NewGuid().ToString(), Name = "Admin", Surname = "User" };
+        typeof(AppUser).GetProperty(nameof(AppUser.FullNameComputed))
+            ?.SetValue(adminUser, "Admin User");
+        
+        await _context.Users.AddAsync(adminUser);
+        await _context.SaveChangesAsync();
+
+        var request = new UpdateUserRequest("Name", "Surname", "NewPassword123");
+        var managerUser = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(CustomClaims.ManagerClaim, "true") }, "TestAuth"));
+
+        // Mock GetClaimsAsync to return AdminClaim for the target user
+        Mock.Get(_userManager).Setup(m => m.GetClaimsAsync(It.Is<AppUser>(u => u.Id == adminUser.Id)))
+            .ReturnsAsync(new List<Claim> { new Claim(CustomClaims.AdminClaim, "true") });
+
+        // Act
+        var result = await _sut.UpdateUserAsync(adminUser.Id, request, managerUser);
+
+        // Assert
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Errors, e => e.Description == "Managers are not allowed to change Admin passwords.");
+    }
+
+    [Fact]
+    public async Task UpdateUserAsync_ShouldReturnFailure_WhenUserNotFound()
+    {
+        // Arrange
+        var request = new UpdateUserRequest("Name", "Surname", null);
+        var currentUser = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(CustomClaims.AdminClaim, "true") }, "TestAuth"));
+
+        // Act
+        var result = await _sut.UpdateUserAsync(Guid.NewGuid().ToString(), request, currentUser);
+
+        // Assert
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Errors, e => e.Description == "User not found.");
     }
 }

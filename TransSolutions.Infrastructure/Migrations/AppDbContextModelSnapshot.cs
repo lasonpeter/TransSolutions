@@ -338,6 +338,9 @@ namespace TransSolutions.Infrastructure.Migrations
                     b.Property<float>("AverageFuelConsumption")
                         .HasColumnType("real");
 
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("uuid");
+
                     b.Property<float>("Distance")
                         .HasColumnType("real");
 
