@@ -100,12 +100,21 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 app.UseCors("AllowViteApp");
-// non production code just for simpler testing for you guys
-if (app.Environment.IsDevelopment())
+
+// Apply migrations on startup
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
-    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    context.Database.Migrate();
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+        context.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating the database.");
+    }
 }
 
 app.UseAuthentication();

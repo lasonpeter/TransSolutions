@@ -1,7 +1,7 @@
-﻿services:
+services:
   db:
-    image: postgres:latest
-    container_name: postgres_db
+    image: postgres:17-alpine
+    container_name: trans_solutions_db
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password123
@@ -13,18 +13,27 @@
       interval: 5s
       timeout: 5s
       retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
-  web:
-    build: TransSolutions/Dockerfile
-    image: trans-solutions-app:latest
+  api:
+    build: 
+      context: .
+      dockerfile: TransSolutions.Api/Dockerfile
+    image: trans-solutions-api:latest
+    container_name: trans_solutions_api
     ports:
       - "8080:8080"
     depends_on:
       db:
         condition: service_healthy 
     environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://0.0.0.0:8080
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=TransSolutionsDB;Username=admin;Password=password123
-      - Jwt__Key=secret
+      - Jwt__Key=aec133a572f9082ad64bbb9a0bd73e74883136f4eacee318f4734f3285bf43d3
       - Jwt__Issuer=https://trans-solutions.com
       - Jwt__Audience=https://trans-solutions.com
-      - ASPNETCORE_ENVIRONMENT=Development
+
+volumes:
+  postgres_data:
