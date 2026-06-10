@@ -14,7 +14,6 @@ COPY ["TransSolutions.Shared/TransSolutions.Shared.csproj", "TransSolutions.Shar
 RUN dotnet restore "TransSolutions.Api/TransSolutions.Api.csproj"
 COPY . .
 WORKDIR "/src/TransSolutions.Api"
-RUN dotnet build "TransSolutions.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
