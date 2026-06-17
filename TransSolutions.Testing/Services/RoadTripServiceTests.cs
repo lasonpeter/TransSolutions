@@ -64,7 +64,7 @@ public class RoadTripServiceTests
 
         _driverRepositoryMock.Setup(r => r.GetByIdAsync(driver.Id, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(driver);
-        _vehicleRepositoryMock.Setup(r => r.GetByIdAsync(vehicle.Id, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+        _vehicleRepositoryMock.Setup(r => r.GetByIdAsync(vehicle.Id, It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(vehicle);
         
         if (expectedSuccess)
@@ -104,7 +104,7 @@ public class RoadTripServiceTests
 
         _driverRepositoryMock.Setup(r => r.GetByIdAsync(request.DriverId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(driver);
-        _vehicleRepositoryMock.Setup(r => r.GetByIdAsync(request.CarId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+        _vehicleRepositoryMock.Setup(r => r.GetByIdAsync(request.CarId, It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Vehicle)null!);
 
         

@@ -28,11 +28,4 @@ public record GetVehicleRequest
     public bool? IsActive { get; init; } = true;
 }
 
-public record GetVehiclesRequest
-{
-    public string? Name { get; init; }
-    public string? RegistrationPlateNumber { get; init; }
-    public int PageNumber { get; init; }= 1;
-    public int PageSize { get; init; } = 10;
-    public bool? IsActive { get; init; } = true;
-}
+public record GetVehiclesRequest(string? Name = null, string? RegistrationPlateNumber = null, int PageNumber = 1, int PageSize = 10, bool? IsActive = true);

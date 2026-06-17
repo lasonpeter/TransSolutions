@@ -10,12 +10,14 @@ namespace TransSolutions.Testing.Services;
 public class VehicleServiceTests
 {
     private readonly Mock<IVehicleRepository> _vehicleRepositoryMock;
+    private readonly Mock<IIssueTicketRepository> _issueTicketRepositoryMock;
     private readonly VehicleService _sut;
 
     public VehicleServiceTests()
     {
         _vehicleRepositoryMock = new Mock<IVehicleRepository>();
-        _sut = new VehicleService(_vehicleRepositoryMock.Object);
+        _issueTicketRepositoryMock = new Mock<IIssueTicketRepository>();
+        _sut = new VehicleService(_vehicleRepositoryMock.Object, _issueTicketRepositoryMock.Object);
     }
 
     [Fact]
@@ -50,7 +52,7 @@ public class VehicleServiceTests
             VehicleType = VehicleType.Bus
         };
 
-        _vehicleRepositoryMock.Setup(r => r.GetByIdAsync(vehicle.Id, true, It.IsAny<CancellationToken>()))
+        _vehicleRepositoryMock.Setup(r => r.GetByIdAsync(vehicle.Id, true, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(vehicle);
 
         await _sut.UpdateVehicle(request, CancellationToken.None);
@@ -65,7 +67,7 @@ public class VehicleServiceTests
     public async Task UpdateVehicle_ShouldThrowWhenNotFound()
     {
         var request = new UpdateVehicleRequest { Id = Guid.NewGuid() };
-        _vehicleRepositoryMock.Setup(r => r.GetByIdAsync(request.Id, true, It.IsAny<CancellationToken>()))
+        _vehicleRepositoryMock.Setup(r => r.GetByIdAsync(request.Id, true, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Vehicle)null!);
 
         await Assert.ThrowsAsync<KeyNotFoundException>(() => _sut.UpdateVehicle(request, CancellationToken.None));
@@ -83,8 +85,8 @@ public class VehicleServiceTests
             RegistrationPlateNumber = "ABC"
         };
 
-        _vehicleRepositoryMock.Setup(r => r.GetByIdAsync(vehicle.Id, false, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(vehicle);
+        _vehicleRepositoryMock.Setup(r => r.GetQueryable())
+            .Returns(new List<Vehicle> { vehicle }.AsQueryable().BuildMock());
 
         var response = await _sut.GetVehicle(new GetVehicleRequest { Id = vehicle.Id }, CancellationToken.None);
 
@@ -116,7 +118,7 @@ public class VehicleServiceTests
     public async Task DeleteVehicle_ShouldMarkAsInactive()
     {
         var vehicle = new Vehicle { Id = Guid.NewGuid(), IsActive = true };
-        _vehicleRepositoryMock.Setup(r => r.GetByIdAsync(vehicle.Id, true, It.IsAny<CancellationToken>()))
+        _vehicleRepositoryMock.Setup(r => r.GetByIdAsync(vehicle.Id, true, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(vehicle);
 
 

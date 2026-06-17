@@ -10,6 +10,7 @@ public record GetVehicleResponse
     public VehicleType VehicleType { get; init; } 
     public DateTime CreatedAt { get; init; }
     public bool IsActive { get; init; }
+    public IEnumerable<IssueTicketResponse>? IssueTickets { get; init; }
 }
 
 public record GetVehiclesResponse

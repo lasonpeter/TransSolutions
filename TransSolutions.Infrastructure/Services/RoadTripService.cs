@@ -27,7 +27,7 @@ public class RoadTripService : IRoadTripService
         if (driver == null)
             throw new KeyNotFoundException("Driver not found");
 
-        var vehicle = await _vehicleRepository.GetByIdAsync(request.CarId, track: false, ct);
+        var vehicle = await _vehicleRepository.GetByIdAsync(request.CarId, track: false, ct: ct);
 
         if (vehicle == null)
             throw new KeyNotFoundException("Car not found");

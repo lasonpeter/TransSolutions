@@ -329,6 +329,49 @@ namespace TransSolutions.Infrastructure.Migrations
                     b.ToTable("Drivers");
                 });
 
+            modelBuilder.Entity("TransSolutions.Domain.Models.BusinessLogic.IssueTicket", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AuthorId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsResolved")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ResolvedById")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Severity")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("VehicleId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("ResolvedById");
+
+                    b.HasIndex("VehicleId");
+
+                    b.ToTable("IssueTickets");
+                });
+
             modelBuilder.Entity("TransSolutions.Domain.Models.BusinessLogic.RoadTrip", b =>
                 {
                     b.Property<Guid>("Id")
@@ -462,6 +505,31 @@ namespace TransSolutions.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("TransSolutions.Domain.Models.BusinessLogic.IssueTicket", b =>
+                {
+                    b.HasOne("TransSolutions.Domain.Models.Auth.AppUser", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TransSolutions.Domain.Models.Auth.AppUser", "ResolvedBy")
+                        .WithMany()
+                        .HasForeignKey("ResolvedById");
+
+                    b.HasOne("TransSolutions.Domain.Models.BusinessLogic.Vehicle", "Vehicle")
+                        .WithMany("IssueTickets")
+                        .HasForeignKey("VehicleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+
+                    b.Navigation("ResolvedBy");
+
+                    b.Navigation("Vehicle");
+                });
+
             modelBuilder.Entity("TransSolutions.Domain.Models.BusinessLogic.RoadTrip", b =>
                 {
                     b.HasOne("TransSolutions.Domain.Models.BusinessLogic.Driver", "Driver")
@@ -493,6 +561,8 @@ namespace TransSolutions.Infrastructure.Migrations
 
             modelBuilder.Entity("TransSolutions.Domain.Models.BusinessLogic.Vehicle", b =>
                 {
+                    b.Navigation("IssueTickets");
+
                     b.Navigation("RoadTrips");
                 });
 #pragma warning restore 612, 618

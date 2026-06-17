@@ -14,7 +14,7 @@ public class VehicleRepository : IVehicleRepository
         _context = context;
     }
 
-    public async Task<Vehicle?> GetByIdAsync(Guid id, bool track = true, CancellationToken ct = default)
+    public async Task<Vehicle?> GetByIdAsync(Guid id, bool track = true, bool includeIssueTickets = false, CancellationToken ct = default)
     {
         var query = _context.Vehicles.AsQueryable();
 
@@ -22,6 +22,15 @@ public class VehicleRepository : IVehicleRepository
         {
             query = query.AsNoTracking();
         }
+
+        if (includeIssueTickets)
+        {
+            query = query.Include(x => x.IssueTickets)!
+                .ThenInclude(it => it.Author)
+                .Include(x => x.IssueTickets)!
+                .ThenInclude(it => it.ResolvedBy);
+        }
+        
         return await query.FirstOrDefaultAsync(x => x.Id == id, ct);
     }
 

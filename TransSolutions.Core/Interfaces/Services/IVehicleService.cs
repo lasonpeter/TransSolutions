@@ -22,4 +22,10 @@ public interface IVehicleService
     
     // Gets a paginated list of vehicles
     public Task<GetVehiclesResponse> GetVehicles(GetVehiclesRequest request, CancellationToken ct);
+
+    // Adds a new issue ticket to a vehicle
+    public Task AddIssueTicket(CreateIssueTicketRequest request, string userId, CancellationToken ct);
+
+    // Resolves an existing issue ticket
+    public Task ResolveIssueTicket(ResolveIssueTicketRequest request, string userId, CancellationToken ct);
 }

@@ -15,6 +15,7 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<Driver> Drivers { get; set; }
     public DbSet<Vehicle> Vehicles { get; set; }
     public DbSet<RoadTrip> RoadTrips { get; set; }
+    public DbSet<IssueTicket> IssueTickets { get; set; }
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
     }

@@ -12,5 +12,6 @@ public class Vehicle
     public VehicleType VehicleType { get; set; }
     public DateTime CreatedAt { get; set; }
     public bool IsActive { get; set; }
-    public IEnumerable<RoadTrip>? RoadTrips { get; set; }
+    public IEnumerable<RoadTrip> RoadTrips { get; set; } = new List<RoadTrip>();
+    public IEnumerable<IssueTicket> IssueTickets { get; set; } = new List<IssueTicket>();
 }

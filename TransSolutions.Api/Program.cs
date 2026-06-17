@@ -37,6 +37,7 @@ builder.Services.AddScoped<IDriverService,DriverService>();
 builder.Services.AddScoped<IVehicleService,VehicleService>();
 builder.Services.AddScoped<IDriverRepository, DriverRepository>();
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
+builder.Services.AddScoped<IIssueTicketRepository, IssueTicketRepository>();
 builder.Services.AddScoped<IRoadTripRepository, RoadTripRepository>();
 builder.Services.AddScoped<IRoadTripService, RoadTripService>();
 
