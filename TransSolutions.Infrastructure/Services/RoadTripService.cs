@@ -22,8 +22,7 @@ public class RoadTripService : IRoadTripService
 
     public async Task<CreateRoadTripResponse> CreateTrip(CreateRoadTripRequest request, Guid userId, CancellationToken ct)
     {
-        var driver = await _driverRepository.GetQueryable()
-            .FirstOrDefaultAsync(x => x.AppUserId == userId.ToString(), ct);
+        var driver = await _driverRepository.GetByIdAsync(request.DriverId, track: false, ct);
 
         if (driver == null)
             throw new KeyNotFoundException("Driver not found");
@@ -64,7 +63,6 @@ public class RoadTripService : IRoadTripService
             Id = Guid.NewGuid(),
             DriverId = driver.Id,
             VehicleId = request.CarId,
-            DeviceId = request.DeviceId,
             StartTime = request.StartDate,
             EndTime = request.EndDate,
             Distance = request.Distance,
@@ -96,7 +94,6 @@ public class RoadTripService : IRoadTripService
             Id = trip.Id,
             DriverId = trip.DriverId,
             VehicleId = trip.VehicleId,
-            DeviceId = trip.DeviceId,
             StartDate = trip.StartTime,
             EndDate = trip.EndTime,
             Distance = trip.Distance,
@@ -142,7 +139,6 @@ public class RoadTripService : IRoadTripService
                 Id = x.Id,
                 DriverId = x.DriverId,
                 VehicleId = x.VehicleId,
-                DeviceId = x.DeviceId,
                 StartDate = x.StartTime,
                 EndDate = x.EndTime,
                 Distance = x.Distance,
@@ -151,10 +147,10 @@ public class RoadTripService : IRoadTripService
         };
     }
 
-    public async Task<GetRoadTripsResponse> GetTripsByDeviceId(GetRoadTripsByDeviceIdRequest request, CancellationToken ct)
+    public async Task<GetRoadTripsResponse> GetTripsByDriverId(GetRoadTripsByDriverIdRequest request, CancellationToken ct)
     {
         var query = await _tripRepository.GetQueryable(ct);
-        query = query.Where(x => x.DeviceId == request.DeviceId);
+        query = query.Where(x => x.DriverId == request.DriverId);
 
         var totalCount = await query.CountAsync(ct);
         var trips = await query
@@ -171,7 +167,6 @@ public class RoadTripService : IRoadTripService
                 Id = x.Id,
                 DriverId = x.DriverId,
                 VehicleId = x.VehicleId,
-                DeviceId = x.DeviceId,
                 StartDate = x.StartTime,
                 EndDate = x.EndTime,
                 Distance = x.Distance,

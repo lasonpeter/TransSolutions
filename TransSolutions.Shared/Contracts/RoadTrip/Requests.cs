@@ -3,7 +3,7 @@ namespace TransSolutions.Shared.Contracts.RoadTrip;
 public record CreateRoadTripRequest
 {
     public Guid CarId { get; init; }
-    public Guid DeviceId { get; init; }
+    public Guid DriverId { get; init; }
     public DateTime StartDate { get; init; }
     public DateTime EndDate { get; init; }
     public float Distance { get; init; }
@@ -14,7 +14,6 @@ public record UpdateRoadTripRequest
 {
     public Guid Id { get; init; }
     public Guid? CarId { get; init; }
-    public Guid? DeviceId { get; init; }
     public DateTime? StartDate { get; init; }
     public DateTime? EndDate { get; init; }
     public float? Distance { get; init; }
@@ -37,9 +36,9 @@ public record GetRoadTripsRequest
     public int PageSize { get; init; } = 10;
 }
 
-public record GetRoadTripsByDeviceIdRequest
+public record GetRoadTripsByDriverIdRequest
 {
-    public Guid DeviceId { get; init; }
+    public Guid DriverId { get; init; }
     public int PageNumber { get; init; } = 1;
     public int PageSize { get; init; } = 10;
 }
