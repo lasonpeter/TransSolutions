@@ -48,4 +48,18 @@ public class RoadTripRepository : IRoadTripRepository
             .Include(x => x.Vehicle)
             .AsNoTracking();
     }
+
+    public async Task AddPointAsync(RoadTripPoint point, CancellationToken ct)
+    {
+        _context.RoadTripPoints.Add(point);
+        await _context.SaveChangesAsync(ct);
+    }
+
+    public async Task<List<RoadTripPoint>> GetPointsAsync(Guid roadTripId, CancellationToken ct)
+    {
+        return await _context.RoadTripPoints
+            .Where(x => x.RoadTripId == roadTripId)
+            .OrderBy(x => x.Timestamp)
+            .ToListAsync(ct);
+    }
 }

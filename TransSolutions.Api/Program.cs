@@ -128,9 +128,6 @@ app.MapFallback(async (HttpContext ctx) =>
 {
     // Custom logic here if needed
 });
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwaggerGen();
-}
+app.UseSwaggerGen();
 
 app.Run();

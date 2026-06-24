@@ -16,6 +16,7 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<Vehicle> Vehicles { get; set; }
     public DbSet<RoadTrip> RoadTrips { get; set; }
     public DbSet<IssueTicket> IssueTickets { get; set; }
+    public DbSet<RoadTripPoint> RoadTripPoints { get; set; }
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
     }
@@ -24,6 +25,16 @@ public class AppDbContext : IdentityDbContext<AppUser>
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+
+        modelBuilder.Entity<RoadTripPoint>(entity =>
+        {
+            entity.HasKey(p => new { p.RoadTripId, p.Timestamp });
+
+            entity.HasOne<RoadTrip>()
+                .WithMany()
+                .HasForeignKey(p => p.RoadTripId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
 
         modelBuilder.Entity<RefreshTokens>(entity => 
         {

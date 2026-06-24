@@ -9,4 +9,6 @@ public interface IRoadTripRepository
     public Task DeleteAsync(RoadTrip roadTrip, CancellationToken ct);
     public Task<RoadTrip?> GetByIdAsync(Guid id, bool track = true, CancellationToken ct = default);
     public Task<IQueryable<RoadTrip>> GetQueryable(CancellationToken ct);
+    public Task AddPointAsync(RoadTripPoint point, CancellationToken ct);
+    public Task<List<RoadTripPoint>> GetPointsAsync(Guid roadTripId, CancellationToken ct);
 }

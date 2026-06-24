@@ -47,3 +47,12 @@ public record DeleteRoadTripRequest
 {
     public Guid Id { get; init; }
 }
+
+public record AddRoadTripPointRequest
+{
+    public Guid RoadTripId { get; init; }
+    public double Latitude { get; init; }
+    public double Longitude { get; init; }
+    public double Altitude { get; init; }
+    public DateTime? Timestamp { get; init; }
+}

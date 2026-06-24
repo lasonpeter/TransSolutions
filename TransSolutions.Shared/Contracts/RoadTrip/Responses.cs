@@ -1,4 +1,16 @@
+using System;
+using System.Collections.Generic;
+
 namespace TransSolutions.Shared.Contracts.RoadTrip;
+
+public record RoadTripPointDto
+{
+    public Guid RoadTripId { get; init; }
+    public DateTime Timestamp { get; init; }
+    public double Latitude { get; init; }
+    public double Longitude { get; init; }
+    public double Altitude { get; init; }
+}
 
 public record GetRoadTripResponse
 {
@@ -9,6 +21,7 @@ public record GetRoadTripResponse
     public DateTime EndDate { get; init; }
     public float Distance { get; init; }
     public float AverageFuelConsumption { get; init; }
+    public List<RoadTripPointDto> Points { get; init; } = new();
 }
 
 public record GetRoadTripsResponse

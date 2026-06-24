@@ -21,4 +21,7 @@ public interface IRoadTripService
 
     // Gets a list of road trips by device ID
     Task<GetRoadTripsResponse> GetTripsByDriverId(GetRoadTripsByDriverIdRequest request, CancellationToken ct);
+
+    // Adds a telemetry point to a road trip
+    Task AddTripPoint(AddRoadTripPointRequest request, CancellationToken ct);
 }

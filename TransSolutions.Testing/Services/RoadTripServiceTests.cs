@@ -22,6 +22,8 @@ public class RoadTripServiceTests
         _driverRepositoryMock = new Mock<IDriverRepository>();
         _vehicleRepositoryMock = new Mock<IVehicleRepository>();
         _tripRepositoryMock = new Mock<IRoadTripRepository>();
+        _tripRepositoryMock.Setup(r => r.GetPointsAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RoadTripPoint>());
         _sut = new RoadTripService(
             _driverRepositoryMock.Object,
             _vehicleRepositoryMock.Object,
@@ -174,5 +176,46 @@ public class RoadTripServiceTests
 
         Assert.Single(response.RoadTrips);
         Assert.Equal(driverId, response.RoadTrips.First().DriverId);
+    }
+
+    [Fact]
+    public async Task AddTripPoint_ShouldCalculateHaversineDistance()
+    {
+        // Arrange
+        var trip = new RoadTrip
+        {
+            Id = Guid.NewGuid(),
+            DriverId = Guid.NewGuid(),
+            VehicleId = Guid.NewGuid(),
+            Distance = 0
+        };
+
+        _tripRepositoryMock.Setup(r => r.GetByIdAsync(trip.Id, true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(trip);
+
+        var points = new List<RoadTripPoint>
+        {
+            new RoadTripPoint { RoadTripId = trip.Id, Latitude = 52.22977, Longitude = 21.01178, Timestamp = DateTime.UtcNow.AddMinutes(-5) }, // Warsaw
+            new RoadTripPoint { RoadTripId = trip.Id, Latitude = 50.06465, Longitude = 19.94498, Timestamp = DateTime.UtcNow } // Krakow
+        };
+
+        _tripRepositoryMock.Setup(r => r.GetPointsAsync(trip.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(points);
+
+        var request = new AddRoadTripPointRequest
+        {
+            RoadTripId = trip.Id,
+            Latitude = 50.06465,
+            Longitude = 19.94498,
+            Altitude = 200
+        };
+
+        // Act
+        await _sut.AddTripPoint(request, CancellationToken.None);
+
+        // Assert
+        // Distance Warsaw - Krakow is roughly 250-260km
+        Assert.True(trip.Distance > 240 && trip.Distance < 265, $"Calculated distance was {trip.Distance}");
+        _tripRepositoryMock.Verify(r => r.UpdateAsync(trip, It.IsAny<CancellationToken>()), Times.Once);
     }
 }

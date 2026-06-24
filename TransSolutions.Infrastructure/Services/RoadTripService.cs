@@ -89,6 +89,8 @@ public class RoadTripService : IRoadTripService
         var trip = await _tripRepository.GetByIdAsync(request.Id, track: false, ct);
         if (trip == null) throw new KeyNotFoundException("Trip not found");
 
+        var points = await _tripRepository.GetPointsAsync(request.Id, ct);
+
         return new GetRoadTripResponse
         {
             Id = trip.Id,
@@ -97,8 +99,47 @@ public class RoadTripService : IRoadTripService
             StartDate = trip.StartTime,
             EndDate = trip.EndTime,
             Distance = trip.Distance,
-            AverageFuelConsumption = trip.AverageFuelConsumption
+            AverageFuelConsumption = trip.AverageFuelConsumption,
+            Points = points.Select(p => new RoadTripPointDto
+            {
+                RoadTripId = p.RoadTripId,
+                Timestamp = p.Timestamp,
+                Latitude = p.Latitude,
+                Longitude = p.Longitude,
+                Altitude = p.Altitude
+            }).ToList()
         };
+    }
+
+    public async Task AddTripPoint(AddRoadTripPointRequest request, CancellationToken ct)
+    {
+        var trip = await _tripRepository.GetByIdAsync(request.RoadTripId, track: true, ct);
+        if (trip == null) throw new KeyNotFoundException("Trip not found");
+
+        var point = new RoadTripPoint
+        {
+            RoadTripId = request.RoadTripId,
+            Timestamp = request.Timestamp ?? DateTime.UtcNow,
+            Latitude = request.Latitude,
+            Longitude = request.Longitude,
+            Altitude = request.Altitude
+        };
+
+        await _tripRepository.AddPointAsync(point, ct);
+
+        // Fetch all points to compute cumulative distance
+        var points = await _tripRepository.GetPointsAsync(request.RoadTripId, ct);
+        double totalDistance = 0;
+        for (int i = 0; i < points.Count - 1; i++)
+        {
+            totalDistance += CalculateDistance(
+                points[i].Latitude, points[i].Longitude,
+                points[i + 1].Latitude, points[i + 1].Longitude
+            );
+        }
+
+        trip.Distance = (float)totalDistance;
+        await _tripRepository.UpdateAsync(trip, ct);
     }
 
     public async Task<GetRoadTripsResponse> GetTrips(GetRoadTripsRequest request, CancellationToken ct)
@@ -173,5 +214,22 @@ public class RoadTripService : IRoadTripService
                 AverageFuelConsumption = x.AverageFuelConsumption
             })
         };
+    }
+
+    private static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
+    {
+        var r = 6371.0; // radius of Earth in km
+        var dLat = ToRadians(lat2 - lat1);
+        var dLon = ToRadians(lon2 - lon1);
+        var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                Math.Cos(ToRadians(lat1)) * Math.Cos(ToRadians(lat2)) *
+                Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+        var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+        return r * c;
+    }
+
+    private static double ToRadians(double val)
+    {
+        return (Math.PI / 180.0) * val;
     }
 }

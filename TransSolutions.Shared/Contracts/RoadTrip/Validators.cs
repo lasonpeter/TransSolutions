@@ -8,7 +8,7 @@ public class CreateRoadTripValidator : AbstractValidator<CreateRoadTripRequest>
     {
         RuleFor(x => x.CarId).NotEmpty();
         RuleFor(x => x.DriverId).NotEmpty();
-        RuleFor(x => x.Distance).GreaterThan(0);
+        RuleFor(x => x.Distance).GreaterThanOrEqualTo(0);
         RuleFor(x => x.AverageFuelConsumption).GreaterThan(0);
         RuleFor(x => x.StartDate).NotEmpty();
         RuleFor(x => x.EndDate).NotEmpty().GreaterThan(x => x.StartDate);

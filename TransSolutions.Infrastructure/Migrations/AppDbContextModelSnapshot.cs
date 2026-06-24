@@ -405,6 +405,28 @@ namespace TransSolutions.Infrastructure.Migrations
                     b.ToTable("RoadTrips");
                 });
 
+            modelBuilder.Entity("TransSolutions.Domain.Models.BusinessLogic.RoadTripPoint", b =>
+                {
+                    b.Property<Guid>("RoadTripId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double>("Altitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("double precision");
+
+                    b.HasKey("RoadTripId", "Timestamp");
+
+                    b.ToTable("RoadTripPoints");
+                });
+
             modelBuilder.Entity("TransSolutions.Domain.Models.BusinessLogic.Vehicle", b =>
                 {
                     b.Property<Guid>("Id")
@@ -547,6 +569,15 @@ namespace TransSolutions.Infrastructure.Migrations
                     b.Navigation("Driver");
 
                     b.Navigation("Vehicle");
+                });
+
+            modelBuilder.Entity("TransSolutions.Domain.Models.BusinessLogic.RoadTripPoint", b =>
+                {
+                    b.HasOne("TransSolutions.Domain.Models.BusinessLogic.RoadTrip", null)
+                        .WithMany()
+                        .HasForeignKey("RoadTripId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("TransSolutions.Domain.Models.Auth.AppUser", b =>
